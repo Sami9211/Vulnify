@@ -1,0 +1,40 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="vulnify-grad" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7c5cff" />
+      <stop offset="0.55" stop-color="#00f5d4" />
+      <stop offset="1" stop-color="#f72585" />
+    </linearGradient>
+    <linearGradient id="vulnify-shine" x1="32" y1="6" x2="32" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.35" />
+      <stop offset="0.4" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+  <path
+    d="M32 4 L54 12 V30 C54 44 45 53 32 60 C19 53 10 44 10 30 V12 Z"
+    fill="url(#vulnify-grad)"
+  />
+  <path
+    d="M32 4 L54 12 V30 C54 44 45 53 32 60 C19 53 10 44 10 30 V12 Z"
+    fill="url(#vulnify-shine)"
+  />
+  <path
+    d="M21 24 L29 42 C30 44.5 34 44.5 35 42 L43 24"
+    fill="none"
+    stroke="#06060f"
+    stroke-width="5.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    opacity="0.28"
+  />
+  <path
+    d="M21 23 L29 41 C30 43.5 34 43.5 35 41 L43 23"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="4.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="43" cy="23" r="3.3" fill="#ffffff" />
+  <circle cx="43" cy="23" r="1.5" fill="#f72585" />
+</svg>

@@ -1,0 +1,43 @@
+{
+  "vendor_sectors": {
+    "moodle": "academic",
+    "blackboard": "academic",
+    "instructure": "academic",
+    "canvas": "academic",
+    "microsoft": "enterprise",
+    "oracle": "enterprise",
+    "sap": "enterprise",
+    "vmware": "enterprise",
+    "cisco": "enterprise",
+    "juniper": "enterprise",
+    "paloaltonetworks": "enterprise",
+    "fortinet": "enterprise",
+    "ibm": "enterprise",
+    "amazon": "enterprise",
+    "redhat": "enterprise",
+    "salesforce": "enterprise",
+    "adobe": "enterprise",
+    "zoom": "small_business",
+    "sage": "small_business",
+    "teamviewer": "small_business",
+    "wordpress": "social_organization",
+    "mozilla": "social_organization",
+    "apache": "social_organization",
+    "openssl": "social_organization",
+    "linux": "social_organization",
+    "debian": "social_organization",
+    "canonical": "social_organization"
+  },
+  "product_keywords": {
+    "academic": ["moodle", "canvas", "blackboard", "university", "lms", "school", "education"],
+    "social_organization": ["wordpress", "charity", "ngo", "nonprofit", "community", "foundation"],
+    "small_business": ["payroll", "sage", "quickbooks", "zoom", "teamviewer", "smb"],
+    "enterprise": ["vsphere", "esxi", "active directory", "exchange", "sharepoint", "fortios", "pan-os", "ios xe"]
+  },
+  "sector_labels": {
+    "academic": "Academic institutions",
+    "social_organization": "Social organizations",
+    "small_business": "Small businesses",
+    "enterprise": "Large enterprises"
+  }
+}
