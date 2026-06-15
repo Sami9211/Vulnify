@@ -333,3 +333,120 @@ export async function fetchSampleAssets(): Promise<string> {
   const j = await r.json();
   return j.content || '';
 }
+
+/* ----------------------- Live threat-intel connectors --------------------- */
+
+export interface ConnectorField {
+  key: string;
+  label: string;
+  type: 'text' | 'secret' | 'number' | 'select';
+  required?: boolean;
+  options?: string[];
+  default?: string | number;
+}
+
+export interface ConnectorType {
+  id: string;
+  label: string;
+  description: string;
+  fields: ConnectorField[];
+}
+
+export interface ConnectorConfig {
+  id: string;
+  type: string;
+  name: string;
+  enabled: boolean;
+  label: string;
+  // custom_http
+  url?: string;
+  items_path?: string;
+  title_field?: string;
+  // alienvault_otx
+  endpoint?: string;
+  limit?: number;
+  // masked secrets (never the raw value)
+  api_key_set?: boolean;
+  api_key_hint?: string;
+  auth_header_set?: boolean;
+  auth_header_hint?: string;
+}
+
+export interface ConnectorsList {
+  types: ConnectorType[];
+  connectors: ConnectorConfig[];
+}
+
+export interface LiveEvent {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  timestamp: string | null;
+  tags: string[];
+  metrics: { label: string; value: string | number }[];
+  countries: string[];
+  url: string | null;
+  severity: string | null;
+  source: string;
+}
+
+export interface LiveResult {
+  connector: ConnectorConfig;
+  fetched_at: string;
+  events: LiveEvent[];
+  stats: {
+    total_events: number;
+    total_indicators: number;
+    top_tags: { tag: string; count: number }[];
+    top_countries: { country: string; count: number }[];
+  };
+  degraded?: boolean;
+  degraded_reason?: string;
+}
+
+export async function fetchConnectors(): Promise<ConnectorsList> {
+  const r = await fetch(`${API}/connectors`);
+  if (!r.ok) throw new Error('Failed to load connectors');
+  return r.json();
+}
+
+export async function saveConnector(
+  payload: Record<string, unknown>
+): Promise<{ success: boolean; connector?: ConnectorConfig; error?: string }> {
+  const r = await fetch(`${API}/connectors`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return r.json();
+}
+
+export async function deleteConnector(id: string): Promise<{ success: boolean }> {
+  const r = await fetch(`${API}/connectors/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+  return r.json();
+}
+
+export async function testConnector(
+  id: string
+): Promise<{ ok: boolean; message: string; event_count?: number }> {
+  const r = await fetch(`${API}/connectors/${encodeURIComponent(id)}/test`, {
+    method: 'POST',
+  });
+  return r.json();
+}
+
+export async function fetchConnectorLive(
+  id: string,
+  fallbackDemo = true
+): Promise<LiveResult> {
+  const q = fallbackDemo ? '?fallback=demo' : '';
+  const r = await fetch(`${API}/connectors/${encodeURIComponent(id)}/live${q}`);
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.error || 'Failed to fetch live data');
+  }
+  return r.json();
+}

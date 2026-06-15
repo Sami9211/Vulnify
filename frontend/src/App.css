@@ -2123,11 +2123,427 @@ code {
   text-decoration: underline;
 }
 
+/* mobile slide-in drawer + toggle */
+.sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 0.85rem;
+  left: 0.85rem;
+  z-index: 90;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(12, 12, 26, 0.95);
+  color: var(--text);
+  cursor: pointer;
+  place-items: center;
+  box-shadow: var(--shadow-soft);
+}
+
+.sidebar-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: rgba(4, 4, 12, 0.6);
+  backdrop-filter: blur(2px);
+  animation: fade-up 0.25s var(--ease-out);
+}
+
 @media (max-width: 720px) {
   .app-with-sidebar {
     padding-left: 0;
   }
-  .sidebar {
-    display: none;
+  .sidebar-toggle {
+    display: grid;
   }
+  .sidebar {
+    width: 250px;
+    transform: translateX(-100%);
+    transition: transform 0.3s var(--ease-out);
+  }
+  .sidebar:hover {
+    width: 250px;
+    box-shadow: none;
+  }
+  .sidebar.is-open {
+    transform: translateX(0);
+    box-shadow: 12px 0 48px rgba(0, 0, 0, 0.6);
+  }
+  .sidebar.is-open .sidebar-brand-text,
+  .sidebar.is-open .sidebar-label {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  /* keep the sticky header clear of the floating toggle button */
+  .header {
+    padding-left: 4rem;
+  }
+}
+
+/* ============================ LIVE CONNECTORS ============================ */
+.connectors {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.connectors-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.connectors-pills {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.conn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.25s var(--ease-out), border-color 0.25s, background 0.25s,
+    transform 0.2s;
+}
+
+.conn-pill:hover {
+  color: var(--text);
+  border-color: var(--border-bright);
+}
+
+.conn-pill.active {
+  color: var(--text);
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.28), rgba(0, 245, 212, 0.12));
+  border-color: transparent;
+  box-shadow: 0 4px 18px var(--accent-glow);
+}
+
+.conn-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+}
+.conn-dot.demo {
+  background: var(--muted);
+}
+.conn-dot.alienvault_otx {
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+}
+.conn-dot.custom_http {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.conn-form {
+  border-color: rgba(124, 92, 255, 0.3);
+}
+
+.conn-form-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.conn-form-head h3 {
+  margin: 0 0 0.5rem;
+}
+
+.conn-close {
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  color: var(--text);
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.conn-close:hover {
+  background: var(--danger);
+}
+
+.conn-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+  margin: 0.5rem 0 0.75rem;
+}
+
+.conn-form-hint {
+  margin: 0 0 0.85rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.conn-form-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.conn-test-msg {
+  font-size: 0.82rem;
+}
+.conn-test-msg.ok {
+  color: var(--success);
+}
+.conn-test-msg.err {
+  color: var(--danger);
+}
+
+.conn-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+}
+
+.conn-toolbar-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.conn-source-badge {
+  font-weight: 700;
+  color: var(--text);
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(124, 92, 255, 0.15);
+  border: 1px solid var(--border);
+}
+
+.conn-keyhint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.74rem;
+}
+
+.conn-updated {
+  color: var(--cyan);
+}
+
+.conn-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.conn-toolbar-actions .btn {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+}
+
+.conn-auto {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.conn-auto input {
+  accent-color: var(--accent);
+}
+
+.conn-danger:hover:not(:disabled) {
+  border-color: var(--danger) !important;
+  color: #ffb3c1;
+}
+
+.conn-banner {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+}
+.conn-banner.ok {
+  background: rgba(6, 214, 160, 0.1);
+  border-color: rgba(6, 214, 160, 0.35);
+  color: #6ee7b7;
+}
+.conn-banner.err {
+  background: rgba(255, 77, 109, 0.1);
+  border-color: rgba(255, 77, 109, 0.35);
+  color: #ffb3c1;
+}
+.conn-banner.warn {
+  background: rgba(255, 183, 3, 0.08);
+  border-color: rgba(255, 183, 3, 0.35);
+  color: var(--warning);
+}
+
+.conn-kpi-text {
+  font-size: 1.15rem !important;
+  text-transform: capitalize;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conn-live-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .conn-live-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.conn-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.conn-events {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 620px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.conn-events::-webkit-scrollbar {
+  width: 6px;
+}
+.conn-events::-webkit-scrollbar-thumb {
+  background: rgba(124, 92, 255, 0.4);
+  border-radius: 3px;
+}
+
+.conn-event {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.25s, background 0.25s, transform 0.2s;
+  animation: fade-up 0.4s var(--ease-out) both;
+}
+
+.conn-event:hover {
+  background: rgba(124, 92, 255, 0.08);
+  border-left-color: var(--cyan);
+  transform: translateX(2px);
+}
+
+.conn-event-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.conn-event-top strong {
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.conn-event-time {
+  font-size: 0.7rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.conn-event-sub {
+  font-size: 0.72rem;
+  color: var(--cyan);
+  margin-top: 0.15rem;
+}
+
+.conn-event-desc {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.conn-event-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+}
+
+.conn-metric {
+  font-size: 0.72rem;
+  padding: 0.18rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text);
+}
+
+.conn-metric em {
+  font-style: normal;
+  color: var(--muted);
+  margin-right: 0.25rem;
+}
+
+.conn-event-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+
+.conn-tag {
+  font-size: 0.68rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(124, 92, 255, 0.14);
+  border: 1px solid var(--border);
+  color: #c4b5fd;
+}
+
+.conn-tag.geo {
+  background: rgba(0, 245, 212, 0.1);
+  color: var(--cyan);
+}
+
+.conn-rank-row {
+  grid-template-columns: 22px 1fr 1.2fr auto;
+}
+
+.ranked-bar-fill.geo {
+  background: linear-gradient(90deg, #00f5d4, #3b82f6);
 }

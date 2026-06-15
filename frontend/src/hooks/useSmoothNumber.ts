@@ -7,10 +7,9 @@ export function useSmoothNumber(target: number, durationMs = 600) {
   useEffect(() => {
     const start = display;
     const diff = target - start;
-    if (Math.abs(diff) < 0.0001) {
-      setDisplay(target);
-      return;
-    }
+    // Already at target (within epsilon) — nothing to animate. Avoid a
+    // synchronous setState in the effect body (cascading renders).
+    if (Math.abs(diff) < 0.0001) return;
     const t0 = performance.now();
     let frame: number;
 

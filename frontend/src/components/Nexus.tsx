@@ -363,6 +363,7 @@ export function Nexus({ data, view }: Props) {
   useEffect(() => {
     let mounted = true;
     let cleanupNew: (() => void) | undefined;
+    let cleanupConfirmed: (() => void) | undefined;
 
     const poll = async () => {
       try {
@@ -405,7 +406,10 @@ export function Nexus({ data, view }: Props) {
           cleanupNew?.();
           cleanupNew = markNew(freshIncoming, setNewIncomingIds);
         }
-        if (freshConfirmed.length) markNew(freshConfirmed, setNewConfirmedIds);
+        if (freshConfirmed.length) {
+          cleanupConfirmed?.();
+          cleanupConfirmed = markNew(freshConfirmed, setNewConfirmedIds);
+        }
       } catch {
         /* ignore */
       }
@@ -417,6 +421,7 @@ export function Nexus({ data, view }: Props) {
       mounted = false;
       clearInterval(id);
       cleanupNew?.();
+      cleanupConfirmed?.();
     };
   }, [markNew]);
 

@@ -14,6 +14,7 @@ import {
   type NexusFilters,
 } from './api';
 import { Analyzer } from './components/Analyzer';
+import { Connectors } from './components/Connectors';
 import { FilterBar } from './components/FilterBar';
 import { Nexus } from './components/Nexus';
 import { Sidebar } from './components/Sidebar';
@@ -115,6 +116,7 @@ function App() {
       {tab === 'nexus' && <Sidebar active={view} onNavigate={navigateView} />}
       <header className="header">
         <div className="header-brand">
+          <img className="header-logo" src="/vulnify.svg" alt="Vulnify logo" width="44" height="44" />
           <div>
             <h1>
               <span>Vulnify</span>
@@ -165,7 +167,22 @@ function App() {
           </div>
         )}
 
-        {tab === 'nexus' && (
+        {tab === 'nexus' && view === 'sec-connectors' && (
+          <div className="tab-panel">
+            <div className="nexus">
+              <div className="nexus-page-head">
+                <h2>Live connectors</h2>
+                <p>
+                  Stream live threat intelligence from AlienVault OTX or any custom
+                  HTTP feed straight onto your dashboard.
+                </p>
+              </div>
+              <Connectors />
+            </div>
+          </div>
+        )}
+
+        {tab === 'nexus' && view !== 'sec-connectors' && (
           <div className="tab-panel">
             {nexusLoading && (
               <div className="loading">

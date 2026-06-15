@@ -7,18 +7,34 @@ Two things in one platform:
 1. **Stack analyzer** - paste your software asset list and get a **prioritised, plain-English list of CVEs** that actually affect your stack, each with a CVSS score, EPSS probability, KEV flag, **trust score**, **recommended mitigation**, and **direct links to NVD/MITRE**.
 2. **Nexus dashboard** - a SOC-style vulnerability intelligence console with a live ingestion feed, an interactive **world threat map**, and fully filterable analytics (by industry, vendor, country, severity, status, threat type, date).
 
-Everything is computed from **real offline feeds** (NVD CVE, CISA KEV, FIRST EPSS). No live APIs are called at runtime.
+The core analytics are computed from **real offline feeds** (NVD CVE, CISA KEV,
+FIRST EPSS). You can *optionally* layer on **live** threat intelligence via
+pluggable connectors (AlienVault OTX or any custom HTTP feed) — see below.
 
-## Quick start
+## Quick start — one click
 
-### 1. Download data (one-time)
+The fastest way to see the dashboard, on any OS:
+
+**Windows** — double-click **`run.bat`** (or run it in a terminal).
+**Linux / macOS** — `./run.sh`
+
+The launcher creates the Python venv, installs backend + frontend dependencies,
+makes sure data feeds exist (downloading the real ones, or generating realistic
+**sample** feeds if the network is unavailable), starts both servers and opens
+the dashboard at **http://localhost:5173**.
+
+> Want a guaranteed-offline demo with zero network? `run.bat --sample` /
+> `./run.sh --sample` forces generated sample data.
+
+## Quick start — manual
+
+### 1. Get data (one-time)
 
 ```bash
-chmod +x scripts/download_data.sh
-./scripts/download_data.sh
+python3 scripts/download_data.py          # real NVD / KEV / EPSS feeds (cross-platform)
+# or, fully offline:
+python3 scripts/generate_sample_data.py   # realistic synthetic feeds
 ```
-
-This fetches **real offline feeds**: NVD CVE JSON (FKIE), CISA KEV, and EPSS.
 
 ### 2. Backend
 
@@ -30,7 +46,8 @@ pip install -r requirements.txt
 python app.py
 ```
 
-API runs at **http://127.0.0.1:5001**
+API runs at **http://127.0.0.1:5001**. Configurable via env vars:
+`VULNIFY_HOST`, `VULNIFY_PORT`, `VULNIFY_DEBUG` (debug is **off** by default).
 
 ### 3. Frontend dashboard
 
@@ -48,6 +65,22 @@ Open **http://localhost:5173**
 source backend/.venv/bin/activate
 python run_analysis.py data/sample_asset_list.txt
 ```
+
+## Live connectors (optional)
+
+Open **Live connectors** in the sidebar to stream real-time intelligence onto
+the dashboard:
+
+| Connector | What it does |
+|-----------|--------------|
+| **AlienVault OTX** | Pulls community **pulses** + indicators from [OTX](https://otx.alienvault.com). Paste your free OTX API key in the connector form. |
+| **Custom HTTP** | Point Vulnify at any JSON endpoint; it auto-detects the item list (or set a dotted `items_path`) and renders events, tags and targeted regions. |
+| **Demo feed** | Built-in synthetic OTX-style data — works offline, no key required. |
+
+API keys are stored server-side only (in `backend/data/connectors.json`, which
+is git-ignored) and are **never** returned to the browser — the API exposes
+only a masked hint. If a live source is unreachable, the panel transparently
+falls back to the demo feed so the dashboard is never empty.
 
 ## Features
 
@@ -85,26 +118,32 @@ python run_analysis.py data/sample_asset_list.txt
 ## Project structure
 
 ```
+├── run.bat / run.sh           # one-click cross-platform launchers
 ├── backend/
 │   ├── app.py                 # Flask REST API
-│   ├── pipeline/              # loader, normalizer, matcher, ranker, analytics, nexus, service
+│   ├── pipeline/              # loader, normalizer, matcher, ranker, analytics,
+│   │                          #   nexus, connectors, service
 │   └── data/
 │       ├── cpe_dictionary.json        # informal name → CPE
 │       ├── vendor_countries.json      # vendor → HQ country
 │       ├── vendor_locations.json      # vendor → city/region/country
 │       ├── sector_taxonomy.json       # vendor/product → org sector
 │       ├── industry_taxonomy.json     # vendor/product → industry
-│       └── cwe_categories.json        # CWE id → weakness label
+│       ├── cwe_categories.json        # CWE id → weakness label
+│       └── connectors.json            # saved live connectors (git-ignored, may hold keys)
 ├── frontend/                  # React + Vite + Recharts + react-simple-maps
 │   ├── public/world-110m.json # offline world topojson for the map
-│   └── src/components/        # Nexus, Analyzer, Sidebar, FilterBar, WorldMap
-├── data/                      # Downloaded feeds (not in git)
+│   └── src/components/        # Nexus, Analyzer, Connectors, Sidebar, FilterBar, WorldMap
+├── data/                      # Downloaded or generated feeds (not in git)
 ├── docs/
 │   ├── PITCH.md               # 5-minute jury presentation script
 │   ├── ARCHITECTURE.md
 │   ├── TECH_STACK.md
 │   └── DATA_SOURCES.md
-├── scripts/download_data.sh
+├── scripts/
+│   ├── download_data.py       # cross-platform real-feed downloader
+│   ├── generate_sample_data.py# offline synthetic feeds
+│   └── ensure_data.py         # used by the launchers (download → sample fallback)
 └── run_analysis.py            # CLI
 ```
 
@@ -135,4 +174,3 @@ Read **`docs/DATA_SOURCES.md`** for every URL, licence, and field used.
 ## Licence
 
 Hackathon/educational use. CVE data from NIST/NVD; KEV from CISA; EPSS from FIRST.
-# Vulnify_Cyber_Intelligence

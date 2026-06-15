@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from .analytics import AnalyticsEngine
+from .connectors import ConnectorError, registry
 from .nexus import get_nexus_dashboard, get_nexus_filters, get_nexus_stream
 from .loader import load_epss, load_kev, load_kev_details
 from .matcher import match_cves_to_assets
@@ -81,3 +82,39 @@ def get_nexus_filter_options() -> dict[str, Any]:
 
 def get_nexus_live_stream(batch_size: int = 5) -> dict[str, Any]:
     return get_nexus_stream(batch_size=batch_size)
+
+
+# --- live threat-intel connectors -------------------------------------------
+def list_connectors() -> dict[str, Any]:
+    return registry.list_public()
+
+
+def save_connector(payload: dict) -> dict[str, Any]:
+    return registry.upsert(payload)
+
+
+def delete_connector(connector_id: str) -> bool:
+    return registry.delete(connector_id)
+
+
+def fetch_connector_live(connector_id: str, use_cache: bool = True) -> dict[str, Any]:
+    return registry.fetch(connector_id, use_cache=use_cache)
+
+
+def test_connector(connector_id: str) -> dict[str, Any]:
+    return registry.test(connector_id)
+
+
+__all__ = [
+    "ConnectorError",
+    "delete_connector",
+    "fetch_connector_live",
+    "get_dashboard_analytics",
+    "get_nexus_analytics",
+    "get_nexus_filter_options",
+    "get_nexus_live_stream",
+    "list_connectors",
+    "run_analysis",
+    "save_connector",
+    "test_connector",
+]

@@ -1,0 +1,33 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.Python
+
+# ---- Node / frontend ----
+node_modules/
+frontend/dist/
+dist/
+*.local
+.vite/
+
+# ---- Vulnify data feeds (downloaded or generated, never committed) ----
+# Real NVD/KEV/EPSS feeds and synthetic sample feeds both live here.
+data/*.json
+data/*.csv
+data/*.csv.gz
+data/*.json.xz
+!data/sample_asset_list.txt
+
+# ---- Runtime connector config (may contain API keys / secrets) ----
+backend/data/connectors.json
+
+# ---- Editor / OS ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log

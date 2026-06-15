@@ -19,6 +19,10 @@ SECTOR_TAXONOMY_FILE = BACKEND_DATA / "sector_taxonomy.json"
 VENDOR_LOCATIONS_FILE = BACKEND_DATA / "vendor_locations.json"
 INDUSTRY_TAXONOMY_FILE = BACKEND_DATA / "industry_taxonomy.json"
 
+# User-defined live threat-intel connectors (AlienVault OTX, custom HTTP feeds).
+# Written at runtime; kept out of version control (see .gitignore).
+CONNECTORS_FILE = BACKEND_DATA / "connectors.json"
+
 # Urgency weights (stretch goal: combined score)
 KEV_BOOST = 1000.0
 EPSS_WEIGHT = 100.0

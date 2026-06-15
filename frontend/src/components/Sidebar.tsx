@@ -1,6 +1,6 @@
-import { type ReactElement, type ReactNode } from 'react';
+import { useState, type ReactElement, type ReactNode } from 'react';
 
-export interface NavSection {
+interface NavSection {
   id: string;
   label: string;
   icon: ReactElement;
@@ -21,7 +21,7 @@ const ic = (path: ReactNode) => (
   </svg>
 );
 
-export const NAV_SECTIONS: NavSection[] = [
+const NAV_SECTIONS: NavSection[] = [
   {
     id: 'sec-overview',
     label: 'Overview',
@@ -40,6 +40,17 @@ export const NAV_SECTIONS: NavSection[] = [
     icon: ic(
       <>
         <path d="M2 12h4l3 8 4-16 3 8h6" />
+      </>
+    ),
+  },
+  {
+    id: 'sec-connectors',
+    label: 'Live connectors',
+    icon: ic(
+      <>
+        <path d="M9 2v6M15 2v6" />
+        <path d="M7 8h10v3a5 5 0 0 1-10 0V8z" />
+        <path d="M12 16v6" />
       </>
     ),
   },
@@ -110,37 +121,71 @@ interface SidebarProps {
 }
 
 export function Sidebar({ active, onNavigate }: SidebarProps) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleNavigate = (id: string) => {
+    onNavigate(id);
+    setMobileOpen(false);
+  };
+
   return (
-    <aside className="sidebar">
-      <div className="sidebar-inner">
-        <div className="sidebar-brand">
-          <img className="sidebar-brand-mark" src="/vulnify.svg" alt="Vulnify" width="32" height="32" />
-        </div>
-        <nav className="sidebar-nav">
-          {NAV_SECTIONS.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className={`sidebar-link${active === s.id ? ' active' : ''}`}
-              onClick={() => onNavigate(s.id)}
-            >
-              <span className="sidebar-icon">{s.icon}</span>
-              <span className="sidebar-label">{s.label}</span>
-            </button>
-          ))}
-        </nav>
-        <div className="sidebar-foot">
-          <span className="sidebar-icon">
-            {ic(
+    <>
+      <button
+        type="button"
+        className="sidebar-toggle"
+        aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'}
+        aria-expanded={mobileOpen}
+        onClick={() => setMobileOpen((o) => !o)}
+      >
+        {mobileOpen
+          ? ic(
               <>
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 8v4l3 2" />
+                <path d="M18 6 6 18M6 6l12 12" />
+              </>
+            )
+          : ic(
+              <>
+                <path d="M3 6h18M3 12h18M3 18h18" />
               </>
             )}
-          </span>
-          <span className="sidebar-label">Live · real feeds</span>
+      </button>
+
+      {mobileOpen && (
+        <div className="sidebar-scrim" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+      )}
+
+      <aside className={`sidebar${mobileOpen ? ' is-open' : ''}`}>
+        <div className="sidebar-inner">
+          <div className="sidebar-brand">
+            <img className="sidebar-brand-mark" src="/vulnify.svg" alt="Vulnify" width="32" height="32" />
+            <span className="sidebar-brand-text">Vulnify</span>
+          </div>
+          <nav className="sidebar-nav">
+            {NAV_SECTIONS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                className={`sidebar-link${active === s.id ? ' active' : ''}`}
+                onClick={() => handleNavigate(s.id)}
+              >
+                <span className="sidebar-icon">{s.icon}</span>
+                <span className="sidebar-label">{s.label}</span>
+              </button>
+            ))}
+          </nav>
+          <div className="sidebar-foot">
+            <span className="sidebar-icon">
+              {ic(
+                <>
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 8v4l3 2" />
+                </>
+              )}
+            </span>
+            <span className="sidebar-label">Live · real feeds</span>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }

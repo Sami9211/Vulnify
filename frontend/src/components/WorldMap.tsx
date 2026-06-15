@@ -24,6 +24,11 @@ export interface MapRow {
   kev: number;
 }
 
+interface RSMGeography {
+  rsmKey: string;
+  properties: { name?: string } & Record<string, unknown>;
+}
+
 interface Props {
   data: MapRow[];
   height?: number;
@@ -75,9 +80,9 @@ export function WorldMap({ data, height = 460 }: Props) {
       >
         <ZoomableGroup zoom={1} minZoom={1} maxZoom={5} center={[15, 10]}>
           <Geographies geography={GEO_URL}>
-            {({ geographies }: { geographies: any[] }) =>
+            {({ geographies }: { geographies: RSMGeography[] }) =>
               geographies.map((geo) => {
-                const name = geo.properties.name as string;
+                const name = (geo.properties.name ?? '') as string;
                 const row = lookup.get(name);
                 const value = row?.value ?? 0;
                 // sqrt scaling so smaller counts are still visible

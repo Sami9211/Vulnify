@@ -162,7 +162,7 @@ export function Analyzer({
   const [limit, setLimit] = useState(40);
   const [exporting, setExporting] = useState(false);
 
-  const rows = result?.results ?? [];
+  const rows = useMemo(() => result?.results ?? [], [result]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toUpperCase();
