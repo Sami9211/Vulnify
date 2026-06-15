@@ -24,6 +24,7 @@ type Tab = 'nexus' | 'analyzer';
 function App() {
   const [tab, setTab] = useState<Tab>('nexus');
   const [health, setHealth] = useState<HealthData | null>(null);
+  const [backendOffline, setBackendOffline] = useState(false);
   const [nexus, setNexus] = useState<NexusData | null>(null);
   const [nexusLoading, setNexusLoading] = useState(true);
   const [nexusRefreshing, setNexusRefreshing] = useState(false);
@@ -35,12 +36,8 @@ function App() {
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
   const nexusFetched = useRef(false);
+  const filterFetched = useRef(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    fetchHealth().then(setHealth).catch(() => setHealth(null));
-    fetchNexusFilters().then(setFilterOptions).catch(() => setFilterOptions(null));
-  }, []);
 
   const loadNexus = useCallback(async (f: NexusFilters, initial: boolean) => {
     if (initial) setNexusLoading(true);
@@ -58,8 +55,37 @@ function App() {
     }
   }, []);
 
+  // Poll backend health so the UI can show a clear "offline" banner and
+  // auto-recover (loading data) once the backend comes up — no manual refresh.
   useEffect(() => {
-    if (!nexusFetched.current) loadNexus({}, true);
+    let active = true;
+    const check = async () => {
+      try {
+        const h = await fetchHealth();
+        if (!active) return;
+        setHealth(h);
+        setBackendOffline(false);
+        if (!filterFetched.current) {
+          fetchNexusFilters()
+            .then((o) => {
+              filterFetched.current = true;
+              setFilterOptions(o);
+            })
+            .catch(() => {});
+        }
+        if (!nexusFetched.current) loadNexus({}, true);
+      } catch {
+        if (!active) return;
+        setHealth(null);
+        setBackendOffline(true);
+      }
+    };
+    check();
+    const id = setInterval(check, 5000);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
   }, [loadNexus]);
 
   const handleFilterChange = useCallback(
@@ -145,6 +171,14 @@ function App() {
       </header>
 
       <main className="main">
+        {backendOffline && (
+          <div className="offline-banner">
+            <strong>Backend offline.</strong> The dashboard can’t reach the Vulnify API on
+            <code> http://127.0.0.1:5001</code>. Start it with <code>./run.sh</code> /{' '}
+            <code>run.bat</code> (or <code>python backend/app.py</code>). If a previous run is
+            still using port 5001, stop it first. Reconnecting automatically…
+          </div>
+        )}
         {health && (
           <div className="status-bar">
             <div

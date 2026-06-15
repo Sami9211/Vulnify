@@ -2547,3 +2547,26 @@ code {
 .ranked-bar-fill.geo {
   background: linear-gradient(90deg, #00f5d4, #3b82f6);
 }
+
+/* ============================ BACKEND OFFLINE ============================ */
+.offline-banner {
+  background: rgba(255, 77, 109, 0.12);
+  border: 1px solid rgba(255, 77, 109, 0.4);
+  color: #ffd0d8;
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  animation: fade-up 0.4s var(--ease-out) both;
+}
+.offline-banner strong {
+  color: #ff4d6d;
+}
+.offline-banner code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.1rem 0.35rem;
+  border-radius: 5px;
+}

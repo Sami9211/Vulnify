@@ -1,4 +1,86 @@
-const API = '/api';
+// API base. Defaults to the dev-server proxy ('/api'); override for a static
+// deploy by setting VITE_API_BASE (e.g. http://127.0.0.1:5001/api) at build time.
+const API = (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, '') || '/api';
+
+const OFFLINE_MSG =
+  'Cannot reach the Vulnify backend. Make sure it is running on http://127.0.0.1:5001 ' +
+  '(start it with run.sh / run.bat, or `python backend/app.py`).';
+
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status = 0) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
+async function request(path: string, init?: RequestInit): Promise<Response> {
+  try {
+    return await fetch(`${API}${path}`, init);
+  } catch {
+    // DNS / connection refused / proxy could not connect to the backend
+    throw new ApiError(OFFLINE_MSG);
+  }
+}
+
+// Read a response body once, tolerating empty and non-JSON payloads.
+async function readBody(r: Response): Promise<unknown> {
+  let text: string;
+  try {
+    text = await r.text();
+  } catch {
+    return null;
+  }
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { __nonJson: text.slice(0, 200) };
+  }
+}
+
+function bodyError(body: unknown): string | null {
+  if (body && typeof body === 'object' && 'error' in body) {
+    const e = (body as { error?: unknown }).error;
+    if (typeof e === 'string' && e) return e;
+  }
+  return null;
+}
+
+function isUsable(body: unknown): boolean {
+  return !!body && typeof body === 'object' && !('__nonJson' in (body as object));
+}
+
+// Strict GET: throws a clear ApiError on any non-OK / empty / non-JSON response.
+async function getJSON<T>(path: string): Promise<T> {
+  const r = await request(path);
+  const body = await readBody(r);
+  if (!r.ok) throw new ApiError(bodyError(body) || `Backend error (${r.status}).`, r.status);
+  if (!isUsable(body)) throw new ApiError(OFFLINE_MSG, r.status);
+  return body as T;
+}
+
+// Lenient send/GET for endpoints that report their own status in the JSON body
+// (e.g. { success: false, error }). Returns the parsed body on any HTTP status,
+// but still surfaces a clear error when the backend is unreachable.
+async function sendJSON<T>(
+  path: string,
+  method: string,
+  jsonBody?: unknown
+): Promise<T> {
+  const init: RequestInit = { method };
+  if (jsonBody !== undefined) {
+    init.headers = { 'Content-Type': 'application/json' };
+    init.body = JSON.stringify(jsonBody);
+  }
+  const r = await request(path, init);
+  const body = await readBody(r);
+  if (!isUsable(body)) {
+    throw new ApiError(bodyError(body) || (r.ok ? OFFLINE_MSG : `Backend error (${r.status}).`), r.status);
+  }
+  return body as T;
+}
 
 export interface HealthData {
   status: string;
@@ -258,14 +340,11 @@ export interface NexusStreamData {
 }
 
 export async function fetchHealth(): Promise<HealthData> {
-  const r = await fetch(`${API}/health`);
-  return r.json();
+  return getJSON<HealthData>('/health');
 }
 
 export async function fetchDashboard(): Promise<DashboardData> {
-  const r = await fetch(`${API}/dashboard`);
-  if (!r.ok) throw new Error((await r.json()).error || 'Dashboard load failed');
-  return r.json();
+  return getJSON<DashboardData>('/dashboard');
 }
 
 function filtersToQuery(filters?: NexusFilters): string {
@@ -279,44 +358,35 @@ function filtersToQuery(filters?: NexusFilters): string {
 }
 
 export async function fetchNexus(filters?: NexusFilters): Promise<NexusData> {
-  const r = await fetch(`${API}/nexus${filtersToQuery(filters)}`);
-  if (!r.ok) throw new Error((await r.json()).error || 'Nexus load failed');
-  return r.json();
+  return getJSON<NexusData>(`/nexus${filtersToQuery(filters)}`);
 }
 
 export async function fetchNexusFilters(): Promise<NexusFilterOptions> {
-  const r = await fetch(`${API}/nexus/filters`);
-  if (!r.ok) throw new Error((await r.json()).error || 'Filter load failed');
-  return r.json();
+  return getJSON<NexusFilterOptions>('/nexus/filters');
 }
 
 export async function fetchNexusStream(): Promise<NexusStreamData> {
-  const r = await fetch(`${API}/nexus/stream?batch=8`);
-  if (!r.ok) throw new Error((await r.json()).error || 'Stream failed');
-  return r.json();
+  return getJSON<NexusStreamData>('/nexus/stream?batch=8');
 }
 
 export async function analyzeAssets(assets: string): Promise<AnalysisResponse> {
-  const r = await fetch(`${API}/analyze`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ assets }),
-  });
-  return r.json();
+  return sendJSON<AnalysisResponse>('/analyze', 'POST', { assets });
 }
 
 export async function analyzeSample(): Promise<AnalysisResponse> {
-  const r = await fetch(`${API}/analyze/sample`);
-  return r.json();
+  return sendJSON<AnalysisResponse>('/analyze/sample', 'GET');
 }
 
 export async function exportCsv(assets: string): Promise<void> {
-  const r = await fetch(`${API}/analyze/export`, {
+  const r = await request('/analyze/export', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ assets }),
   });
-  if (!r.ok) throw new Error('Export failed');
+  if (!r.ok) {
+    const body = await readBody(r);
+    throw new ApiError(bodyError(body) || 'Export failed', r.status);
+  }
   const blob = await r.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -329,9 +399,12 @@ export async function exportCsv(assets: string): Promise<void> {
 }
 
 export async function fetchSampleAssets(): Promise<string> {
-  const r = await fetch(`${API}/sample-assets`);
-  const j = await r.json();
-  return j.content || '';
+  try {
+    const j = await getJSON<{ content?: string }>('/sample-assets');
+    return j.content || '';
+  } catch {
+    return '';
+  }
 }
 
 /* ----------------------- Live threat-intel connectors --------------------- */
@@ -406,36 +479,23 @@ export interface LiveResult {
 }
 
 export async function fetchConnectors(): Promise<ConnectorsList> {
-  const r = await fetch(`${API}/connectors`);
-  if (!r.ok) throw new Error('Failed to load connectors');
-  return r.json();
+  return getJSON<ConnectorsList>('/connectors');
 }
 
 export async function saveConnector(
   payload: Record<string, unknown>
 ): Promise<{ success: boolean; connector?: ConnectorConfig; error?: string }> {
-  const r = await fetch(`${API}/connectors`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  return r.json();
+  return sendJSON('/connectors', 'POST', payload);
 }
 
 export async function deleteConnector(id: string): Promise<{ success: boolean }> {
-  const r = await fetch(`${API}/connectors/${encodeURIComponent(id)}`, {
-    method: 'DELETE',
-  });
-  return r.json();
+  return sendJSON(`/connectors/${encodeURIComponent(id)}`, 'DELETE');
 }
 
 export async function testConnector(
   id: string
 ): Promise<{ ok: boolean; message: string; event_count?: number }> {
-  const r = await fetch(`${API}/connectors/${encodeURIComponent(id)}/test`, {
-    method: 'POST',
-  });
-  return r.json();
+  return sendJSON(`/connectors/${encodeURIComponent(id)}/test`, 'POST');
 }
 
 export async function fetchConnectorLive(
@@ -443,10 +503,5 @@ export async function fetchConnectorLive(
   fallbackDemo = true
 ): Promise<LiveResult> {
   const q = fallbackDemo ? '?fallback=demo' : '';
-  const r = await fetch(`${API}/connectors/${encodeURIComponent(id)}/live${q}`);
-  if (!r.ok) {
-    const e = await r.json().catch(() => ({}));
-    throw new Error(e.error || 'Failed to fetch live data');
-  }
-  return r.json();
+  return getJSON<LiveResult>(`/connectors/${encodeURIComponent(id)}/live${q}`);
 }
